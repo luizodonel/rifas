@@ -36,11 +36,11 @@ public class Pedido {
     @Column(name = "codigo_pedido", nullable = false, unique = true, length = 40)
     private String codigoPedido;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rifa_id", nullable = false)
     private Rifa rifa;
 

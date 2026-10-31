@@ -80,7 +80,7 @@ public class Rifa {
     /**
      * Ganhador definitivo após o sorteio
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_ganhador_id")
     private Usuario ganhador;
 

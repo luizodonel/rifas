@@ -53,12 +53,26 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   });
 
   if (!response.ok) {
-    let errorMsg = `Erro na requisição (${response.status})`;
+    let errorMsg = '';
     try {
       const errData = await response.json();
-      errorMsg = errData.message || errorMsg;
+      errorMsg = errData.message || errData.error || '';
     } catch {
-      // fallback
+      // resposta sem corpo JSON
+    }
+
+    if (!errorMsg) {
+      if (response.status === 403) {
+        errorMsg = 'Acesso restrito: Para cadastrar e gerenciar sorteios, é necessário estar conectado como Administrador (CPF 000.000.000-00, Senha admin123).';
+      } else if (response.status === 401) {
+        errorMsg = 'Credenciais inválidas ou sessão expirada. Por favor, entre novamente.';
+      } else if (response.status === 404) {
+        errorMsg = 'Item ou sorteio não encontrado no servidor.';
+      } else if (response.status >= 500) {
+        errorMsg = 'Instabilidade temporária no servidor. Tente novamente em instantes.';
+      } else {
+        errorMsg = `Não foi possível processar a solicitação (código ${response.status}).`;
+      }
     }
     throw new Error(errorMsg);
   }

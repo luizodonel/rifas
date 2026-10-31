@@ -48,18 +48,44 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("Inicializando dados mestres da plataforma de Rifas Online...");
 
-        // 1. Criar Administrador Master se não existir
-        Usuario admin = usuarioRepository.findByCpf("00000000000").orElseGet(() -> {
-            Usuario u = Usuario.builder()
+        // 1. Criar ou Atualizar Administrador Master (00000000000) e Administrador Suporte (11111111111)
+        Usuario admin = usuarioRepository.findByCpf("00000000000").orElse(null);
+        if (admin == null) {
+            admin = Usuario.builder()
                     .cpf("00000000000")
                     .nome("Administrador Master")
                     .dataNascimento(LocalDate.of(1990, 1, 1))
-                    .telefone("61999999999")
+                    .telefone("61982261155")
                     .senhaHash(passwordEncoder.encode("admin123"))
                     .role(Role.ROLE_ADMIN)
                     .build();
-            return usuarioRepository.save(u);
-        });
+            usuarioRepository.save(admin);
+        } else {
+            admin.setNome("Administrador Master");
+            admin.setTelefone("61982261155");
+            admin.setRole(Role.ROLE_ADMIN);
+            admin.setSenhaHash(passwordEncoder.encode("admin123"));
+            usuarioRepository.save(admin);
+        }
+
+        Usuario admin2 = usuarioRepository.findByCpf("11111111111").orElse(null);
+        if (admin2 == null) {
+            admin2 = Usuario.builder()
+                    .cpf("11111111111")
+                    .nome("Admin Suporte")
+                    .dataNascimento(LocalDate.of(1992, 6, 15))
+                    .telefone("61982261155")
+                    .senhaHash(passwordEncoder.encode("admin123"))
+                    .role(Role.ROLE_ADMIN)
+                    .build();
+            usuarioRepository.save(admin2);
+        } else {
+            admin2.setNome("Admin Suporte");
+            admin2.setTelefone("61982261155");
+            admin2.setRole(Role.ROLE_ADMIN);
+            admin2.setSenhaHash(passwordEncoder.encode("admin123"));
+            usuarioRepository.save(admin2);
+        }
 
         // 2. Criar Usuários Concorrentes de Demonstração
         Usuario user1 = usuarioRepository.findByCpf("12345678901").orElseGet(() -> {

@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class SorteioService {
 
     private static final Logger log = LoggerFactory.getLogger(SorteioService.class);
@@ -134,6 +135,7 @@ public class SorteioService {
      * Cron agendado para verificar automaticamente quando o cronômetro zerar (dataHoraSorteio <= now)
      */
     @Scheduled(fixedDelay = 5000)
+    @Transactional
     public void verificarCronometroSorteios() {
         LocalDateTime agora = LocalDateTime.now();
         List<Rifa> rifasParaSortear = rifaRepository.findByStatusAndDataHoraSorteioBefore(StatusRifa.ATIVA, agora);

@@ -13,7 +13,8 @@ import {
   Phone,
   User as UserIcon,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  MessageCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Pedido, Rifa, Usuario } from '../types';
@@ -608,6 +609,19 @@ export const CompraModal: React.FC<CompraModalProps> = ({
               <span className="text-[10px] text-slate-500 block mt-1.5">
                 * Para teste imediato da plataforma e liberação dos números da sorte em tempo real.
               </span>
+            </div>
+
+            {/* Suporte WhatsApp */}
+            <div className="pt-2 text-center">
+              <a
+                href="https://wa.me/5561982261155?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20pagamento%20da%20minha%20cota."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Dúvidas no Pix? WhatsApp Suporte: <strong>(61) 98226-1155</strong></span>
+              </a>
             </div>
           </div>
         )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Trophy, Ticket, ShieldCheck, LogOut, User as UserIcon, Radio } from 'lucide-react';
+import { Sparkles, Trophy, Ticket, ShieldCheck, LogOut, User as UserIcon, Radio, MessageCircle } from 'lucide-react';
 import { Usuario } from '../types';
 
 interface NavbarProps {
@@ -76,6 +76,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Ações da Direita */}
         <div className="flex items-center gap-3">
+          {/* Suporte WhatsApp */}
+          <a
+            href="https://wa.me/5561982261155?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20no%20Rifas%20Online."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors"
+            title="Falar no WhatsApp (61) 98226-1155"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>(61) 98226-1155</span>
+          </a>
+
           {user ? (
             <div className="flex items-center gap-2">
               {/* Botão Painel Admin (Apenas ROLE_ADMIN) */}
@@ -162,6 +174,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Trophy className="w-4 h-4 text-amber-500" />
           <span>Ganhadores</span>
         </button>
+        <a
+          href="https://wa.me/5561982261155?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20no%20Rifas%20Online."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center gap-0.5 text-emerald-400 hover:text-emerald-300"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>Suporte</span>
+        </a>
       </div>
     </header>
   );

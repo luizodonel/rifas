@@ -25,11 +25,11 @@ public class HistoricoSorteio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rifa_id", nullable = false, unique = true)
     private Rifa rifa;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_ganhador_id", nullable = false)
     private Usuario usuarioGanhador;
 
