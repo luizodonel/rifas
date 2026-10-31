@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Phone, User, Calendar, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { X, Lock, Phone, User, Calendar, AlertTriangle } from 'lucide-react';
 import { api, setSavedUser, setToken } from '../services/api';
 import { Usuario } from '../types';
 import { formatCpf, formatPhone, cleanDigits } from '../utils/formatters';
@@ -190,21 +190,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             >
               {isLoading ? 'Entrando...' : 'ENTRAR NA CONTA'}
             </button>
-
-            {/* Atalho Rápido de Acesso Administrador */}
-            <div className="pt-3 border-t border-slate-800 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginCpf('00000000000');
-                  setLoginSenha('admin123');
-                }}
-                className="w-full py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Preencher Acesso Admin (000.000.000-00 / admin123)</span>
-              </button>
-            </div>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-3.5 max-h-[65vh] overflow-y-auto pr-1">

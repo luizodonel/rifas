@@ -55,17 +55,12 @@ Acesse em: `http://localhost:5173` (as requisições `/api` e `/ws` são redirec
 
 ---
 
-## 🔑 Credenciais Padrão do Sistema
+## 🔑 Credenciais Administrativas do Sistema
 
-### Administrador Master (Painel Admin Completo):
-- **CPF:** `000.000.000-00` (ou `00000000000`)
-- **Senha:** `admin123`
+### Administrador Master:
+- **CPF:** `00741052130` (ou `007.410.521-30`)
+- **Senha:** `00741052130`
 - **Acesso:** Libera o botão **"Painel Admin"** no topo da página.
-
-### Usuários de Teste:
-- **Usuário 1:** CPF `12345678901` | Senha: `user123` (Carlos Eduardo Silva)
-- **Usuário 2:** CPF `98765432100` | Senha: `user123` (Mariana Souza Oliveira)
-- **Usuário 3:** CPF `55544433322` | Senha: `user123` (Lucas Gabriel Ferreira)
 
 ---
 

@@ -63,7 +63,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
     if (!errorMsg) {
       if (response.status === 403) {
-        errorMsg = 'Acesso restrito: Para cadastrar e gerenciar sorteios, é necessário estar conectado como Administrador (CPF 000.000.000-00, Senha admin123).';
+        errorMsg = 'Acesso restrito: É necessário estar conectado como Administrador para realizar esta operação.';
       } else if (response.status === 401) {
         errorMsg = 'Credenciais inválidas ou sessão expirada. Por favor, entre novamente.';
       } else if (response.status === 404) {
