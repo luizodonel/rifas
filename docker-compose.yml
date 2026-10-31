@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  rifas-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rifas-online
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://93.127.212.65:3007/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=uiLNTlAAdK0twACplGn10uO9OmAESACVxuorzs40jQhiHj3B6iXDnI0bp2MuFcQO
+    labels:
+      - "coolify.managed=true"

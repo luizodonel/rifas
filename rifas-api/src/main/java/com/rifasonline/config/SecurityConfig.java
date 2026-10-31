@@ -39,6 +39,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Arquivos Estáticos do Frontend SPA
+                .requestMatchers("/", "/index.html", "/assets/**", "/*.ico", "/*.svg", "/*.png", "/*.jpg", "/*.json").permitAll()
                 // Rotas Públicas (Vitrine, Sorteios Ao Vivo, Histórico, Autenticação, WebSocket)
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
