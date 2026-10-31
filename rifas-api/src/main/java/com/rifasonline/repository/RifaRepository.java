@@ -15,3 +15,4 @@ public interface RifaRepository extends JpaRepository<Rifa, Long> {
     List<Rifa> findByStatusInOrderByCreatedAtDesc(List<StatusRifa> statuses);
     List<Rifa> findByStatusAndDataHoraSorteioBefore(StatusRifa status, LocalDateTime dataHora);
 }
+

@@ -14,3 +14,4 @@ public class CheckCpfRequest {
     @NotBlank(message = "O CPF é obrigatório")
     private String cpf;
 }
+

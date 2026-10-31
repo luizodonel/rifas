@@ -37,3 +37,4 @@ public class RifaImagem {
     @Builder.Default
     private Boolean destaque = false;
 }
+

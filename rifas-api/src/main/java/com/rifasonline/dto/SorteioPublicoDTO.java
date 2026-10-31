@@ -25,3 +25,4 @@ public class SorteioPublicoDTO {
     private Integer totalCotasRifa;
     private Integer totalCotasVendidas;
 }
+

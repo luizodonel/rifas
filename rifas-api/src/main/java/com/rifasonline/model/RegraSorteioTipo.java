@@ -4,3 +4,4 @@ public enum RegraSorteioTipo {
     ALEATORIO,
     DIRECIONADO
 }
+

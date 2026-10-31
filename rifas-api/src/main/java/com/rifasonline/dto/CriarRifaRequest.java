@@ -40,3 +40,4 @@ public class CriarRifaRequest {
 
     private List<String> imagensUrls;
 }
+

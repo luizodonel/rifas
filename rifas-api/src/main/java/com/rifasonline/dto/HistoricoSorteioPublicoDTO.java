@@ -26,3 +26,4 @@ public class HistoricoSorteioPublicoDTO {
     private String telefoneMascarado;  // (XX) XXXXX-1234
     private String hashComprovante;
 }
+

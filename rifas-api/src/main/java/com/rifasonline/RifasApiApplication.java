@@ -12,3 +12,4 @@ public class RifasApiApplication {
         SpringApplication.run(RifasApiApplication.class, args);
     }
 }
+

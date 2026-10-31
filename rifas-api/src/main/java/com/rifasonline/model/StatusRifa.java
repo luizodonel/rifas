@@ -6,3 +6,4 @@ public enum StatusRifa {
     AO_VIVO,
     ENCERRADA
 }
+

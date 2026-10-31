@@ -12,3 +12,4 @@ public interface HistoricoSorteioRepository extends JpaRepository<HistoricoSorte
     List<HistoricoSorteio> findTop10ByOrderByDataHoraExecucaoDesc();
     Optional<HistoricoSorteio> findByRifaId(Long rifaId);
 }
+

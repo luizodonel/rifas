@@ -33,3 +33,4 @@ public class RegisterRequest {
     @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
     private String senha;
 }
+

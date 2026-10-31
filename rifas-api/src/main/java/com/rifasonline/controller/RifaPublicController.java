@@ -42,3 +42,4 @@ public class RifaPublicController {
         return ResponseEntity.ok(sorteioService.obterSorteioPublico(rifaId));
     }
 }
+

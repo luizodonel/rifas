@@ -21,3 +21,4 @@ public class ParametrizarSorteioRequest {
      */
     private String cpfDirecionado;
 }
+

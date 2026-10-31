@@ -10,3 +10,4 @@ import java.util.List;
 public interface RifaImagemRepository extends JpaRepository<RifaImagem, Long> {
     List<RifaImagem> findByRifaIdOrderByOrdemAsc(Long rifaId);
 }
+

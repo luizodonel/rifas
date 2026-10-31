@@ -44,3 +44,4 @@ public class RifaPublicDTO {
         private String numeroSorteado;
     }
 }
+

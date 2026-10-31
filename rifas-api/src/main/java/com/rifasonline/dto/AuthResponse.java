@@ -13,3 +13,4 @@ public class AuthResponse {
     private String token;
     private UsuarioSummaryDTO usuario;
 }
+

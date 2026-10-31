@@ -74,3 +74,4 @@ public final class MaskUtils {
         return telefone;
     }
 }
+

@@ -20,3 +20,4 @@ public class UsuarioSummaryDTO {
     private LocalDate dataNascimento;
     private String role;
 }
+

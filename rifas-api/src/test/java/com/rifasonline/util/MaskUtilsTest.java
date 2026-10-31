@@ -36,3 +36,4 @@ class MaskUtilsTest {
         assertEquals("123.456.789-01", MaskUtils.formatarCpf(cpf));
     }
 }
+

@@ -28,3 +28,4 @@ public interface NumeroCotaRepository extends JpaRepository<NumeroCota, Long> {
     @Query("SELECT c FROM NumeroCota c WHERE c.rifa = :rifa AND c.usuario.cpf = :cpf")
     List<NumeroCota> findByRifaAndUsuarioCpf(@Param("rifa") Rifa rifa, @Param("cpf") String cpf);
 }
+

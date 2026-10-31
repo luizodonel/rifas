@@ -16,3 +16,4 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByUsuarioOrderByDataCompraDesc(Usuario usuario);
     List<Pedido> findByRifaAndStatusPagamento(Rifa rifa, StatusPagamento status);
 }
+

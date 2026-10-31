@@ -14,3 +14,4 @@ public class CheckCpfResponse {
     private String cpf;
     private String nome;
 }
+

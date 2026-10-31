@@ -32,3 +32,4 @@ public class SorteioAdminDTO {
     private LocalDate dataNascimento;
     private Integer cotasAdquiridasPeloGanhador;
 }
+

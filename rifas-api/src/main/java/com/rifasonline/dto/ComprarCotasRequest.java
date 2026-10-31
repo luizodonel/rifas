@@ -20,3 +20,4 @@ public class ComprarCotasRequest {
     @Min(value = 1, message = "Compre ao menos 1 cota")
     private Integer quantidade;
 }
+
