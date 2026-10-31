@@ -53,3 +53,4 @@ export function formatPhone(phone: string): string {
   if (clean.length <= 7) return `(${clean.slice(0, 2)}) ${clean.slice(2)}`;
   return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7, 11)}`;
 }
+

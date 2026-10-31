@@ -132,3 +132,4 @@ export const RifaCard: React.FC<RifaCardProps> = ({ rifa, onSelect, onOpenSortei
     </div>
   );
 };
+

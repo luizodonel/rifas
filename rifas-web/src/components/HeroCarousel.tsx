@@ -231,3 +231,4 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
     </div>
   );
 };
+

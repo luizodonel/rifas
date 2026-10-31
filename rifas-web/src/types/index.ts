@@ -133,3 +133,4 @@ export interface AuthResponse {
   token: string;
   usuario: Usuario;
 }
+

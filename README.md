@@ -85,3 +85,4 @@ Acesse em: `http://localhost:5173` (as requisições `/api` e `/ws` são redirec
    - **Modo Livre (Aleatório):** Sorteio aleatório entre cotas pagas.
    - **Modo Direcionado (Controle Admin):** Seleciona previamente o CPF concorrente vencedor.
    - Visualização irrestrita de dados completos do ganhador (CPF completo, telefone real, nascimento, cotas).
+

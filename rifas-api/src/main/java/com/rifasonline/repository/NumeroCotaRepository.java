@@ -18,6 +18,7 @@ public interface NumeroCotaRepository extends JpaRepository<NumeroCota, Long> {
     List<NumeroCota> findByPedido(Pedido pedido);
     boolean existsByRifaAndNumero(Rifa rifa, String numero);
     long countByRifa(Rifa rifa);
+    void deleteByRifa(Rifa rifa);
 
     @Query("SELECT DISTINCT c.usuario FROM NumeroCota c WHERE c.rifa = :rifa")
     List<Usuario> findDistinctUsuariosByRifa(@Param("rifa") Rifa rifa);
