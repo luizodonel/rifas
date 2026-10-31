@@ -7,7 +7,7 @@ import {
   Radio,
   Zap,
   HelpCircle,
-  MessageCircle,
+  MessageSquare,
   Clock,
   ArrowUp
 } from 'lucide-react';
@@ -20,6 +20,7 @@ import { HistoricoSorteios } from './components/HistoricoSorteios';
 import { PainelAdmin } from './components/PainelAdmin';
 import { AuthModal } from './components/AuthModal';
 import { MeusPedidosModal } from './components/MeusPedidosModal';
+import { ChatSuporteWidget } from './components/ChatSuporteWidget';
 import { Rifa, SorteioPublico, Usuario } from './types';
 import { api, getSavedUser, removeToken, setSavedUser } from './services/api';
 import { subscribeToTodosSorteios } from './services/websocket';
@@ -240,15 +241,10 @@ export default function App() {
                 </button>
               </li>
               <li>
-                <a
-                  href="https://wa.me/5561982261155?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20no%20Rifas%20Online."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-400 flex items-center gap-1.5 font-medium text-emerald-400"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>Suporte WhatsApp: (61) 98226-1155</span>
-                </a>
+                <span className="text-slate-400 flex items-center gap-1.5 font-medium">
+                  <MessageSquare className="w-3.5 h-3.5 text-brand-400" />
+                  <span>Suporte: Chat de Atendimento Online</span>
+                </span>
               </li>
             </ul>
           </div>
@@ -326,17 +322,8 @@ export default function App() {
         <MeusPedidosModal onClose={() => setIsMeusPedidosOpen(false)} />
       )}
 
-      {/* Botão Flutuante de Suporte WhatsApp */}
-      <a
-        href="https://wa.me/5561982261155?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20no%20Rifas%20Online."
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 z-40 bg-emerald-500 hover:bg-emerald-400 text-white p-3.5 rounded-full shadow-2xl shadow-emerald-500/50 flex items-center gap-2 group transition-all transform hover:scale-105 active:scale-95"
-        title="Falar com Suporte no WhatsApp (61) 98226-1155"
-      >
-        <MessageCircle className="w-6 h-6 fill-white text-emerald-500" />
-        <span className="hidden sm:inline font-bold text-xs pr-1">Suporte (61) 98226-1155</span>
-      </a>
+      {/* Widget Flutuante de Chat do Suporte Interno */}
+      <ChatSuporteWidget currentUser={user} />
     </div>
   );
 }

@@ -14,11 +14,14 @@ import {
   RotateCcw,
   Sparkles,
   Pencil,
-  Trash2
+  Trash2,
+  MessageSquare
 } from 'lucide-react';
 import { RifaAdmin, SorteioAdmin, SorteioPublico, Usuario } from '../types';
 import { api } from '../services/api';
 import { formatCurrency, formatDate, formatCpf, formatPhone } from '../utils/formatters';
+import { GestaoUsuarios } from './admin/GestaoUsuarios';
+import { ChatAdmin } from './admin/ChatAdmin';
 
 interface PainelAdminProps {
   onClose: () => void;
@@ -26,6 +29,7 @@ interface PainelAdminProps {
 }
 
 export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExecutado }) => {
+  const [abaAtiva, setAbaAtiva] = useState<'RIFAS' | 'USUARIOS' | 'CHAT'>('RIFAS');
   const [rifas, setRifas] = useState<RifaAdmin[]>([]);
   const [selectedRifa, setSelectedRifa] = useState<RifaAdmin | null>(null);
   const [participantesAptos, setParticipantesAptos] = useState<Usuario[]>([]);
@@ -355,8 +359,48 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
           </div>
         )}
 
-        {/* Layout do Painel (2 Colunas) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 flex-1 overflow-y-auto pr-1">
+        {/* Barra de Abas do Administrador */}
+        <div className="flex items-center gap-2 mt-4 pb-2 border-b border-slate-800 shrink-0 overflow-x-auto">
+          <button
+            onClick={() => setAbaAtiva('RIFAS')}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all shrink-0 ${
+              abaAtiva === 'RIFAS'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            <span>Rifas & Sorteios</span>
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva('USUARIOS')}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all shrink-0 ${
+              abaAtiva === 'USUARIOS'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Gestão de Usuários</span>
+          </button>
+
+          <button
+            onClick={() => setAbaAtiva('CHAT')}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all shrink-0 ${
+              abaAtiva === 'CHAT'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Atendimento / Chat</span>
+          </button>
+        </div>
+
+        {/* CONTEÚDO DA ABA 1: RIFAS & SORTEIOS */}
+        {abaAtiva === 'RIFAS' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 flex-1 overflow-y-auto pr-1">
           {/* Coluna da Esquerda: Seletor de Rifas (4 colunas) */}
           <div className="lg:col-span-4 space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
@@ -704,6 +748,21 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
             </div>
           )}
         </div>
+        )}
+
+        {/* CONTEÚDO DA ABA 2: GESTÃO DE USUÁRIOS */}
+        {abaAtiva === 'USUARIOS' && (
+          <div className="mt-6 flex-1 overflow-y-auto pr-1">
+            <GestaoUsuarios />
+          </div>
+        )}
+
+        {/* CONTEÚDO DA ABA 3: CHAT DE ATENDIMENTO */}
+        {abaAtiva === 'CHAT' && (
+          <div className="mt-6 flex-1 overflow-y-auto pr-1">
+            <ChatAdmin />
+          </div>
+        )}
 
         {/* --- MODAL 1: CRIAR NOVA RIFA --- */}
         {showCriarModal && (

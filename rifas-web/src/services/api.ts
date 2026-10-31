@@ -2,12 +2,15 @@ import {
   AuthResponse,
   CheckCpfResponse,
   HistoricoSorteio,
+  MensagemChat,
   Pedido,
   Rifa,
   RifaAdmin,
+  SessaoChat,
   SorteioAdmin,
   SorteioPublico,
-  Usuario
+  Usuario,
+  UsuarioAdmin
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -191,5 +194,72 @@ export const api = {
 
     obterDadosCompletosSorteio: (rifaId: number) =>
       request<SorteioAdmin>(`/api/admin/sorteio/${rifaId}`),
+
+    // Gestão de Usuários
+    usuarios: {
+      listar: () => request<UsuarioAdmin[]>('/api/admin/usuarios'),
+      criar: (data: {
+        cpf: string;
+        nome: string;
+        dataNascimento: string;
+        telefone: string;
+        senha: string;
+        role: 'ROLE_USER' | 'ROLE_ADMIN';
+      }) =>
+        request<UsuarioAdmin>('/api/admin/usuarios', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }),
+      trocarSenha: (id: number, novaSenha: string) =>
+        request<{ success: boolean; message: string }>(`/api/admin/usuarios/${id}/senha`, {
+          method: 'PUT',
+          body: JSON.stringify({ novaSenha }),
+        }),
+      atualizar: (
+        id: number,
+        data: {
+          nome: string;
+          dataNascimento: string;
+          telefone: string;
+          role: 'ROLE_USER' | 'ROLE_ADMIN';
+        }
+      ) =>
+        request<UsuarioAdmin>(`/api/admin/usuarios/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        }),
+      excluir: (id: number) =>
+        request<{ success: boolean; message: string }>(`/api/admin/usuarios/${id}`, {
+          method: 'DELETE',
+        }),
+    },
+
+    // Chat de Atendimento no Painel Admin
+    chat: {
+      listarSessoes: () => request<SessaoChat[]>('/api/admin/chat/sessoes'),
+      obterMensagens: (sessaoId: string) =>
+        request<MensagemChat[]>(`/api/admin/chat/mensagens/${sessaoId}`),
+      responder: (sessaoId: string, resposta: string) =>
+        request<MensagemChat>('/api/admin/chat/responder', {
+          method: 'POST',
+          body: JSON.stringify({ sessaoId, resposta }),
+        }),
+    },
+  },
+
+  // Chat Público para Clientes e Visitantes
+  chat: {
+    enviar: (data: {
+      sessaoId?: string;
+      nomeRemetente?: string;
+      cpf?: string;
+      conteudo: string;
+    }) =>
+      request<MensagemChat>('/api/public/chat/enviar', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    obterMensagens: (sessaoId: string) =>
+      request<MensagemChat[]>(`/api/public/chat/mensagens/${sessaoId}`),
   },
 };

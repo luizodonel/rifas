@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Trophy, Ticket, ShieldCheck, LogOut, User as UserIcon, Radio, MessageCircle } from 'lucide-react';
+import { Sparkles, Trophy, Ticket, ShieldCheck, LogOut, User as UserIcon, Radio, MessageSquare } from 'lucide-react';
 import { Usuario } from '../types';
 
 interface NavbarProps {
@@ -10,6 +10,7 @@ interface NavbarProps {
   onLogout: () => void;
   onNavigateSection: (sectionId: string) => void;
   isAdminOpen: boolean;
+  onOpenChat?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,7 +20,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAdmin,
   onLogout,
   onNavigateSection,
-  isAdminOpen
+  isAdminOpen,
+  onOpenChat
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#0b0f17]/90 border-b border-slate-800/80">
@@ -76,17 +78,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Ações da Direita */}
         <div className="flex items-center gap-3">
-          {/* Suporte WhatsApp */}
-          <a
-            href="https://wa.me/5561982261155?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20no%20Rifas%20Online."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors"
-            title="Falar no WhatsApp (61) 98226-1155"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>(61) 98226-1155</span>
-          </a>
+          {/* Suporte Chat Interno */}
+          {onOpenChat && (
+            <button
+              onClick={onOpenChat}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/30 transition-colors"
+              title="Abrir Chat de Atendimento Online"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Suporte Online</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </button>
+          )}
 
           {user ? (
             <div className="flex items-center gap-2">
@@ -174,15 +177,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Trophy className="w-4 h-4 text-amber-500" />
           <span>Ganhadores</span>
         </button>
-        <a
-          href="https://wa.me/5561982261155?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20no%20Rifas%20Online."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-col items-center gap-0.5 text-emerald-400 hover:text-emerald-300"
-        >
-          <MessageCircle className="w-4 h-4" />
-          <span>Suporte</span>
-        </a>
+        {onOpenChat && (
+          <button
+            onClick={onOpenChat}
+            className="flex flex-col items-center gap-0.5 text-brand-400 hover:text-brand-300"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Suporte</span>
+          </button>
+        )}
       </div>
     </header>
   );

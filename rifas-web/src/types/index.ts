@@ -134,3 +134,35 @@ export interface AuthResponse {
   usuario: Usuario;
 }
 
+export interface MensagemChat {
+  id: number;
+  sessaoId: string;
+  nomeRemetente: string;
+  remetenteAdmin: boolean;
+  conteudo: string;
+  lida: boolean;
+  createdAt: string;
+}
+
+export interface SessaoChat {
+  sessaoId: string;
+  nomeCliente: string;
+  cpfCliente?: string;
+  ultimaMensagem: string;
+  dataUltimaMensagem: string;
+  naoLidas: number;
+}
+
+export interface UsuarioAdmin {
+  id: number;
+  cpf: string;
+  cpfFormatado: string;
+  nome: string;
+  dataNascimento: string;
+  telefone: string;
+  telefoneFormatado: string;
+  role: Role;
+  createdAt: string;
+}
+
+

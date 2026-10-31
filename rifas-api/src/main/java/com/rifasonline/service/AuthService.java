@@ -14,6 +14,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class AuthService {
 
@@ -118,5 +122,83 @@ public class AuthService {
                 .role(u.getRole().name())
                 .build();
     }
-}
 
+    // --- Métodos de Gestão de Usuários Exclusivos do Administrador ---
+
+    public List<UsuarioAdminDTO> listarTodosUsuarios() {
+        return usuarioRepository.findAll()
+                .stream()
+                .map(this::mapToAdminDTO)
+                .sorted(Comparator.comparing(UsuarioAdminDTO::getId).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public UsuarioAdminDTO criarUsuarioPeloAdmin(CriarUsuarioAdminRequest req) {
+        String cleanCpf = req.getCpf().replaceAll("\\D", "");
+        if (cleanCpf.length() != 11) {
+            throw new IllegalArgumentException("CPF inválido. Deve possuir 11 dígitos.");
+        }
+        if (usuarioRepository.existsByCpf(cleanCpf)) {
+            throw new IllegalArgumentException("Este CPF já está cadastrado no sistema.");
+        }
+
+        Usuario novo = Usuario.builder()
+                .cpf(cleanCpf)
+                .nome(req.getNome().trim())
+                .dataNascimento(req.getDataNascimento())
+                .telefone(req.getTelefone().replaceAll("\\D", ""))
+                .senhaHash(passwordEncoder.encode(req.getSenha()))
+                .role(req.getRole() != null ? req.getRole() : Role.ROLE_USER)
+                .build();
+
+        novo = usuarioRepository.save(novo);
+        return mapToAdminDTO(novo);
+    }
+
+    @Transactional
+    public void trocarSenhaUsuarioPeloAdmin(Long usuarioId, TrocarSenhaAdminRequest req) {
+        Usuario u = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + usuarioId));
+
+        u.setSenhaHash(passwordEncoder.encode(req.getNovaSenha()));
+        usuarioRepository.save(u);
+    }
+
+    @Transactional
+    public UsuarioAdminDTO atualizarUsuarioPeloAdmin(Long usuarioId, AtualizarUsuarioAdminRequest req) {
+        Usuario u = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + usuarioId));
+
+        u.setNome(req.getNome().trim());
+        u.setDataNascimento(req.getDataNascimento());
+        u.setTelefone(req.getTelefone().replaceAll("\\D", ""));
+        if (req.getRole() != null) {
+            u.setRole(req.getRole());
+        }
+
+        u = usuarioRepository.save(u);
+        return mapToAdminDTO(u);
+    }
+
+    @Transactional
+    public void excluirUsuarioPeloAdmin(Long usuarioId) {
+        Usuario u = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + usuarioId));
+        usuarioRepository.delete(u);
+    }
+
+    public UsuarioAdminDTO mapToAdminDTO(Usuario u) {
+        return UsuarioAdminDTO.builder()
+                .id(u.getId())
+                .cpf(u.getCpf())
+                .cpfFormatado(MaskUtils.formatarCpf(u.getCpf()))
+                .nome(u.getNome())
+                .dataNascimento(u.getDataNascimento())
+                .telefone(u.getTelefone())
+                .telefoneFormatado(MaskUtils.formatarTelefone(u.getTelefone()))
+                .role(u.getRole())
+                .createdAt(u.getCreatedAt())
+                .build();
+    }
+}
