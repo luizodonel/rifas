@@ -150,6 +150,28 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
+    atualizarRifa: (
+      id: number,
+      data: {
+        titulo: string;
+        subtitulo?: string;
+        descricao: string;
+        precoCota: number;
+        totalCotas: number;
+        dataHoraSorteio: string;
+        imagensUrls: string[];
+      }
+    ) =>
+      request<RifaAdmin>(`/api/admin/rifas/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+
+    excluirRifa: (id: number) =>
+      request<{ success: boolean; message: string }>(`/api/admin/rifas/${id}`, {
+        method: 'DELETE',
+      }),
+
     parametrizarSorteio: (
       rifaId: number,
       data: { regraSorteioTipo: 'ALEATORIO' | 'DIRECIONADO'; cpfDirecionado?: string }

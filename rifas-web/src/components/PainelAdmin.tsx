@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { RifaAdmin, SorteioAdmin, SorteioPublico, Usuario } from '../types';
 import { api } from '../services/api';
@@ -43,20 +45,31 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
   const [novaDataHora, setNovaDataHora] = useState('');
   const [novaImagemUrl, setNovaImagemUrl] = useState('');
 
+  // Formulário de Edição de Rifa
+  const [showEditarModal, setShowEditarModal] = useState(false);
+  const [editTitulo, setEditTitulo] = useState('');
+  const [editSubtitulo, setEditSubtitulo] = useState('');
+  const [editDescricao, setEditDescricao] = useState('');
+  const [editPreco, setEditPreco] = useState('');
+  const [editTotalCotas, setEditTotalCotas] = useState('');
+  const [editDataHora, setEditDataHora] = useState('');
+  const [editImagemUrl, setEditImagemUrl] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Carregar lista de rifas do Admin
-  const carregarRifas = async () => {
+  const carregarRifas = async (idParaManter?: number) => {
     setIsLoading(true);
     try {
       const data = await api.admin.listarRifas();
       setRifas(data);
-      if (data.length > 0 && !selectedRifa) {
-        selecionarRifa(data[0]);
-      } else if (selectedRifa) {
-        const atualizada = data.find((r) => r.id === selectedRifa.id);
-        if (atualizada) selecionarRifa(atualizada);
+      if (data.length > 0) {
+        const idAlvo = idParaManter || selectedRifa?.id || data[0].id;
+        const encontrada = data.find((r) => r.id === idAlvo) || data[0];
+        selecionarRifa(encontrada);
+      } else {
+        setSelectedRifa(null);
       }
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.message || 'Erro ao carregar rifas no painel admin.' });
@@ -122,7 +135,7 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
           modoEscolhido === 'ALEATORIO' ? 'MODO LIVRE (ALEATÓRIO)' : `MODO DIRECIONADO (CPF: ${formatCpf(cpfAlvo)})`
         }`,
       });
-      carregarRifas();
+      carregarRifas(atualizada.id);
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.message || 'Erro ao salvar parametrização.' });
     } finally {
@@ -155,12 +168,29 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
         onSorteioExecutado(resultado);
       }
 
-      await carregarRifas();
+      await carregarRifas(selectedRifa.id);
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.message || 'Erro ao executar sorteio.' });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Abrir Modal de Criação com Data Padrão
+  const abrirModalCriar = () => {
+    const agora = new Date();
+    agora.setHours(20, 0, 0, 0); // Padrão 20h de hoje
+    const offset = agora.getTimezoneOffset() * 60000;
+    const local = new Date(agora.getTime() - offset).toISOString().slice(0, 16);
+
+    setNovoTitulo('');
+    setNovoSubtitulo('');
+    setNovaDescricao('');
+    setNovoPreco('0.50');
+    setNovoTotalCotas('10000');
+    setNovaDataHora(local);
+    setNovaImagemUrl('');
+    setShowCriarModal(true);
   };
 
   // Criar Nova Rifa
@@ -170,7 +200,7 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
     setStatusMsg(null);
 
     try {
-      await api.admin.criarRifa({
+      const criada = await api.admin.criarRifa({
         titulo: novoTitulo,
         subtitulo: novoSubtitulo,
         descricao: novaDescricao,
@@ -181,14 +211,83 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
       });
 
       setShowCriarModal(false);
-      setNovoTitulo('');
-      setNovoSubtitulo('');
-      setNovaDescricao('');
-      setNovaImagemUrl('');
       setStatusMsg({ type: 'success', text: 'Nova rifa criada com sucesso e publicada na vitrine!' });
-      carregarRifas();
+      await carregarRifas(criada.id);
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.message || 'Erro ao criar nova rifa.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Abrir Modal de Edição
+  const abrirModalEditar = () => {
+    if (!selectedRifa) return;
+    setEditTitulo(selectedRifa.titulo);
+    setEditSubtitulo(selectedRifa.subtitulo || '');
+    setEditDescricao(selectedRifa.descricao || '');
+    setEditPreco(String(selectedRifa.precoCota));
+    setEditTotalCotas(String(selectedRifa.totalCotas));
+
+    if (selectedRifa.dataHoraSorteio) {
+      // Formata mantendo fuso local exato
+      const str = selectedRifa.dataHoraSorteio.replace('Z', '').slice(0, 16);
+      setEditDataHora(str);
+    } else {
+      setEditDataHora('');
+    }
+
+    setEditImagemUrl(selectedRifa.imagemPrincipal || (selectedRifa.imagens?.[0] || ''));
+    setShowEditarModal(true);
+  };
+
+  // Salvar Edição de Rifa
+  const handleSalvarEdicao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRifa) return;
+    setIsLoading(true);
+    setStatusMsg(null);
+
+    try {
+      const atualizada = await api.admin.atualizarRifa(selectedRifa.id, {
+        titulo: editTitulo,
+        subtitulo: editSubtitulo,
+        descricao: editDescricao,
+        precoCota: parseFloat(editPreco),
+        totalCotas: parseInt(editTotalCotas),
+        dataHoraSorteio: editDataHora,
+        imagensUrls: editImagemUrl ? [editImagemUrl] : [],
+      });
+
+      setShowEditarModal(false);
+      setStatusMsg({ type: 'success', text: `Rifa "${atualizada.titulo}" atualizada com sucesso!` });
+      setSelectedRifa(atualizada);
+      await carregarRifas(atualizada.id);
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message || 'Erro ao editar rifa.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Excluir Rifa
+  const handleExcluirRifa = async () => {
+    if (!selectedRifa) return;
+    const confirmou = window.confirm(
+      `ATENÇÃO: Deseja realmente EXCLUIR a rifa:\n"${selectedRifa.titulo}"?\n\nEsta operação é irreversível.`
+    );
+    if (!confirmou) return;
+
+    setIsLoading(true);
+    setStatusMsg(null);
+
+    try {
+      await api.admin.excluirRifa(selectedRifa.id);
+      setStatusMsg({ type: 'success', text: `Rifa excluída com sucesso!` });
+      setSelectedRifa(null);
+      await carregarRifas();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message || 'Erro ao excluir rifa.' });
     } finally {
       setIsLoading(false);
     }
@@ -203,7 +302,7 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
         className="relative w-full max-w-6xl bg-slate-900 border border-amber-500/40 rounded-3xl shadow-2xl p-6 sm:p-8 overflow-hidden my-auto max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Cabeçalho do Painel Admin */}
+        {/* Cabeçalho do Painel */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
@@ -213,19 +312,19 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
               <div className="flex items-center gap-2">
                 <h2 className="text-xl sm:text-2xl font-black text-white">PAINEL ADMINISTRATIVO</h2>
                 <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500 text-slate-950 uppercase">
-                  ACESSO RESTRITO ROLE_ADMIN
+                  ROLE_ADMIN
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Controle integral de sorteios, escolha de modo livre vs. direcionado por CPF e auditoria de ganhadores.
+                Gerencie rifas, edite dados, exclua ações e controle sorteios livres vs. direcionados por CPF.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowCriarModal(true)}
-              className="px-3 py-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all"
+              onClick={abrirModalCriar}
+              className="px-3 py-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Nova Rifa</span>
@@ -306,38 +405,66 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
           {/* Coluna da Direita: Painel de Controle da Rifa Selecionada (8 colunas) */}
           {selectedRifa && (
             <div className="lg:col-span-8 space-y-6">
-              {/* Card Resumo e Botão "Sortear Agora" */}
+              {/* Card Resumo, Botões de Editar, Excluir e Sortear */}
               <div className="bg-slate-950 rounded-2xl p-5 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-black text-white">{selectedRifa.titulo}</h3>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-white">{selectedRifa.titulo}</h3>
+                  </div>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Data do Sorteio: {formatDate(selectedRifa.dataHoraSorteio)} • Total Arrecadado:{' '}
+                    Data do Sorteio: <strong className="text-amber-400 font-mono">{formatDate(selectedRifa.dataHoraSorteio)}</strong> • Total Arrecadado:{' '}
                     <strong className="text-emerald-400 font-bold">
                       {formatCurrency(selectedRifa.totalArrecadado)}
                     </strong>
                   </p>
                 </div>
 
-                {/* BOTÃO EXCLUSIVO DE ADMIN: "SORTEAR AGORA" */}
-                {selectedRifa.status !== 'ENCERRADA' ? (
+                {/* Ações da Rifa: Editar, Excluir, Sortear */}
+                <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                  {selectedRifa.status !== 'ENCERRADA' && (
+                    <button
+                      type="button"
+                      onClick={abrirModalEditar}
+                      className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                      title="Editar título, cotas, preço, data e imagem"
+                    >
+                      <Pencil className="w-3.5 h-3.5 text-brand-400" />
+                      <span>Editar</span>
+                    </button>
+                  )}
+
                   <button
-                    onClick={handleSortearAgora}
-                    disabled={isLoading || selectedRifa.cotasVendidas === 0}
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 transition-all transform active:scale-95"
-                    title={
-                      selectedRifa.cotasVendidas === 0
-                        ? 'Nenhuma cota foi comprada ainda'
-                        : 'Disparar sorteio agora seguindo a regra configurada'
-                    }
+                    type="button"
+                    onClick={handleExcluirRifa}
+                    disabled={isLoading}
+                    className="px-3 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                    title="Excluir rifa permanentemente"
                   >
-                    <Play className="w-4 h-4 fill-slate-950" />
-                    <span>SORTEAR AGORA (ADMIN)</span>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Excluir</span>
                   </button>
-                ) : (
-                  <div className="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-slate-300">
-                    Sorteio Já Realizado
-                  </div>
-                )}
+
+                  {/* BOTÃO EXCLUSIVO DE ADMIN: "SORTEAR AGORA" */}
+                  {selectedRifa.status !== 'ENCERRADA' ? (
+                    <button
+                      onClick={handleSortearAgora}
+                      disabled={isLoading || selectedRifa.cotasVendidas === 0}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/25 transition-all transform active:scale-95"
+                      title={
+                        selectedRifa.cotasVendidas === 0
+                          ? 'Nenhuma cota foi comprada ainda'
+                          : 'Disparar sorteio agora seguindo a regra configurada'
+                      }
+                    >
+                      <Play className="w-4 h-4 fill-slate-950" />
+                      <span>SORTEAR AGORA</span>
+                    </button>
+                  ) : (
+                    <div className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-slate-400">
+                      Encerrada
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* SEÇÃO 1: PARAMETRIZAÇÃO DO MODO DE SORTEIO */}
@@ -358,85 +485,101 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
                       className={`p-4 rounded-xl border cursor-pointer transition-all ${
                         modoEscolhido === 'ALEATORIO'
                           ? 'bg-brand-500/10 border-brand-500 text-white shadow-sm'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                          : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-400'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-bold text-sm text-white">Modo Livre (Aleatório)</span>
-                        <input
-                          type="radio"
-                          name="modo"
-                          checked={modoEscolhido === 'ALEATORIO'}
-                          onChange={() => setModoEscolhido('ALEATORIO')}
-                          className="accent-brand-500"
-                        />
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                            modoEscolhido === 'ALEATORIO' ? 'border-brand-500' : 'border-slate-600'
+                          }`}
+                        >
+                          {modoEscolhido === 'ALEATORIO' && (
+                            <div className="w-2 h-2 rounded-full bg-brand-500" />
+                          )}
+                        </div>
+                        <span className="font-bold text-xs uppercase text-white">Modo 1: Livre (Aleatório)</span>
                       </div>
-                      <p className="text-xs text-slate-400">
-                        O sistema sorteia 100% aleatoriamente entre todas as cotas pagas no momento do sorteio.
+                      <p className="text-[11px] leading-relaxed text-slate-400">
+                        O sistema sorteia democraticamente entre todas as cotas pagas da rifa com garantia
+                        criptográfica.
                       </p>
                     </div>
 
-                    {/* Modo 2: Direcionado (Controle Admin) */}
+                    {/* Modo 2: Direcionado por CPF */}
                     <div
                       onClick={() => setModoEscolhido('DIRECIONADO')}
                       className={`p-4 rounded-xl border cursor-pointer transition-all ${
                         modoEscolhido === 'DIRECIONADO'
                           ? 'bg-amber-500/10 border-amber-500 text-white shadow-sm'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                          : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-400'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-bold text-sm text-white">Modo Direcionado (Admin)</span>
-                        <input
-                          type="radio"
-                          name="modo"
-                          checked={modoEscolhido === 'DIRECIONADO'}
-                          onChange={() => setModoEscolhido('DIRECIONADO')}
-                          className="accent-amber-500"
-                        />
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                            modoEscolhido === 'DIRECIONADO' ? 'border-amber-500' : 'border-slate-600'
+                          }`}
+                        >
+                          {modoEscolhido === 'DIRECIONADO' && (
+                            <div className="w-2 h-2 rounded-full bg-amber-500" />
+                          )}
+                        </div>
+                        <span className="font-bold text-xs uppercase text-amber-400">
+                          Modo 2: Direcionado (Controle Admin)
+                        </span>
                       </div>
-                      <p className="text-xs text-slate-400">
-                        O administrador pré-define qual CPF concorrente será o contemplado pelo sorteador.
+                      <p className="text-[11px] leading-relaxed text-slate-400">
+                        O Administrador define previamente o CPF do participante que será o vencedor do sorteio.
                       </p>
                     </div>
                   </div>
 
-                  {/* Seletor de Participante Alvo (quando DIRECIONADO) */}
+                  {/* Campo de Seleção do CPF Alvo (Apenas se Direcionado) */}
                   {modoEscolhido === 'DIRECIONADO' && (
-                    <div className="pt-2 border-t border-slate-800 space-y-3">
-                      <label className="text-xs font-bold text-slate-300 block">
-                        Escolha o Participante Alvo (com cotas pagas):
-                      </label>
-
-                      {participantesAptos.length > 0 ? (
-                        <div className="space-y-2">
-                          <select
-                            value={cpfAlvo}
-                            onChange={(e) => setCpfAlvo(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-sm font-medium text-white focus:outline-none focus:border-amber-500"
-                          >
-                            <option value="">Selecione um participante apto...</option>
-                            {participantesAptos.map((p) => (
-                              <option key={p.id} value={p.cpf}>
-                                {p.nome} — CPF: {formatCpf(p.cpf)} ({formatPhone(p.telefone)})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300">
-                          Nenhum participante comprou cotas pagas nesta rifa ainda. Você também pode digitar o CPF manualmente:
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2">
+                    <div className="p-4 rounded-xl bg-slate-900 border border-amber-500/40 space-y-3">
+                      <div>
+                        <label className="text-xs font-bold text-amber-400 block mb-1">
+                          CPF do Vencedor Escolhido:
+                        </label>
                         <input
                           type="text"
-                          placeholder="Ou digite o CPF: 000.000.000-00"
-                          value={cpfAlvo}
-                          onChange={(e) => setCpfAlvo(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                          placeholder="Digite ou clique em um participante abaixo"
+                          value={formatCpf(cpfAlvo)}
+                          onChange={(e) => setCpfAlvo(e.target.value.replace(/\D/g, ''))}
+                          maxLength={14}
+                          required
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 font-mono text-sm text-white focus:outline-none focus:border-amber-500"
                         />
+                      </div>
+
+                      {/* Seletor Rápido de Participantes Aptos */}
+                      <div>
+                        <span className="text-[11px] font-semibold text-slate-400 block mb-1.5">
+                          Ou escolha rapidamente entre os compradores aptos:
+                        </span>
+                        {participantesAptos.length === 0 ? (
+                          <p className="text-xs text-slate-500 italic">
+                            Nenhum usuário comprou cotas pagas nesta rifa ainda.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1">
+                            {participantesAptos.map((p) => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => setCpfAlvo(p.cpf)}
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono border transition-all ${
+                                  cpfAlvo === p.cpf
+                                    ? 'bg-amber-500 text-slate-950 font-bold border-amber-400'
+                                    : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                                }`}
+                              >
+                                {p.nome.split(' ')[0]} ({formatCpf(p.cpf)})
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -444,7 +587,7 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
                   >
                     <SaveIcon className="w-4 h-4 text-brand-400" />
                     <span>Salvar Parâmetros do Sorteio</span>
@@ -548,9 +691,9 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
                               setModoEscolhido('DIRECIONADO');
                               setCpfAlvo(p.cpf);
                             }}
-                            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-300 font-bold text-[11px] transition-colors"
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30"
                           >
-                            Definir Alvo
+                            Direcionar Vencedor
                           </button>
                         )}
                       </div>
@@ -562,10 +705,10 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
           )}
         </div>
 
-        {/* MODAL CRIAR NOVA RIFA */}
+        {/* --- MODAL 1: CRIAR NOVA RIFA --- */}
         {showCriarModal && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
             onClick={() => setShowCriarModal(false)}
           >
             <div
@@ -675,9 +818,136 @@ export const PainelAdmin: React.FC<PainelAdminProps> = ({ onClose, onSorteioExec
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full py-3.5 rounded-2xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-black text-sm transition-all"
+                    className="w-full py-3.5 rounded-2xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-black text-sm transition-all shadow-lg active:scale-95"
                   >
                     {isLoading ? 'Salvando...' : 'CRIAR E PUBLICAR RIFA'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* --- MODAL 2: EDITAR RIFA EXISTENTE --- */}
+        {showEditarModal && selectedRifa && (
+          <div
+            className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+            onClick={() => setShowEditarModal(false)}
+          >
+            <div
+              className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 overflow-hidden my-auto max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowEditarModal(false)}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800 hover:bg-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-amber-400" />
+                Editar Rifa: {selectedRifa.titulo}
+              </h3>
+
+              <form onSubmit={handleSalvarEdicao} className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Título da Rifa:</label>
+                  <input
+                    type="text"
+                    value={editTitulo}
+                    onChange={(e) => setEditTitulo(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Subtítulo / Chamada:</label>
+                  <input
+                    type="text"
+                    value={editSubtitulo}
+                    onChange={(e) => setEditSubtitulo(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Descrição:</label>
+                  <textarea
+                    rows={3}
+                    value={editDescricao}
+                    onChange={(e) => setEditDescricao(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Preço da Cota (R$):</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={editPreco}
+                      onChange={(e) => setEditPreco(e.target.value)}
+                      required
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Total de Cotas:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editTotalCotas}
+                      onChange={(e) => setEditTotalCotas(e.target.value)}
+                      required
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Data e Hora do Sorteio:</label>
+                  <input
+                    type="datetime-local"
+                    value={editDataHora}
+                    onChange={(e) => setEditDataHora(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  />
+                  <span className="text-[10px] text-slate-400 block mt-1">
+                    * O horário segue exatamente o fuso horário de Brasília (UTC-3).
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">URL da Imagem:</label>
+                  <input
+                    type="url"
+                    value={editImagemUrl}
+                    onChange={(e) => setEditImagemUrl(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="pt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditarModal(false)}
+                    className="flex-1 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-1 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition-all shadow-lg active:scale-95"
+                  >
+                    {isLoading ? 'Salvando...' : 'SALVAR ALTERAÇÕES'}
                   </button>
                 </div>
               </form>
@@ -707,4 +977,3 @@ function SaveIcon(props: any) {
     </svg>
   );
 }
-

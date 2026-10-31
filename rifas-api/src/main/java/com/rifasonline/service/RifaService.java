@@ -5,9 +5,7 @@ import com.rifasonline.dto.ParametrizarSorteioRequest;
 import com.rifasonline.dto.RifaAdminDTO;
 import com.rifasonline.dto.RifaPublicDTO;
 import com.rifasonline.model.*;
-import com.rifasonline.repository.NumeroCotaRepository;
-import com.rifasonline.repository.RifaImagemRepository;
-import com.rifasonline.repository.RifaRepository;
+import com.rifasonline.repository.*;
 import com.rifasonline.util.MaskUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +22,19 @@ public class RifaService {
     private final RifaRepository rifaRepository;
     private final RifaImagemRepository rifaImagemRepository;
     private final NumeroCotaRepository numeroCotaRepository;
+    private final PedidoRepository pedidoRepository;
+    private final HistoricoSorteioRepository historicoSorteioRepository;
 
     public RifaService(RifaRepository rifaRepository,
                        RifaImagemRepository rifaImagemRepository,
-                       NumeroCotaRepository numeroCotaRepository) {
+                       NumeroCotaRepository numeroCotaRepository,
+                       PedidoRepository pedidoRepository,
+                       HistoricoSorteioRepository historicoSorteioRepository) {
         this.rifaRepository = rifaRepository;
         this.rifaImagemRepository = rifaImagemRepository;
         this.numeroCotaRepository = numeroCotaRepository;
+        this.pedidoRepository = pedidoRepository;
+        this.historicoSorteioRepository = historicoSorteioRepository;
     }
 
     public List<RifaPublicDTO> listarRifasPublicas() {
@@ -92,6 +96,55 @@ public class RifaService {
         }
 
         return mapToAdminDTO(rifa);
+    }
+
+    @Transactional
+    public RifaAdminDTO atualizarRifa(Long id, CriarRifaRequest req) {
+        Rifa rifa = rifaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Rifa não encontrada com o ID: " + id));
+
+        if (rifa.getStatus() == StatusRifa.ENCERRADA) {
+            throw new IllegalStateException("Esta rifa já foi encerrada e não pode mais ser editada.");
+        }
+
+        rifa.setTitulo(req.getTitulo().trim());
+        rifa.setSubtitulo(req.getSubtitulo());
+        rifa.setDescricao(req.getDescricao());
+        rifa.setPrecoCota(req.getPrecoCota());
+        rifa.setTotalCotas(req.getTotalCotas());
+        rifa.setDataHoraSorteio(req.getDataHoraSorteio());
+
+        if (req.getImagensUrls() != null && !req.getImagensUrls().isEmpty()) {
+            rifa.getImagens().clear();
+            rifaImagemRepository.deleteByRifa(rifa);
+            for (int i = 0; i < req.getImagensUrls().size(); i++) {
+                String url = req.getImagensUrls().get(i);
+                if (url != null && !url.isBlank()) {
+                    RifaImagem img = RifaImagem.builder()
+                            .rifa(rifa)
+                            .urlImagem(url.trim())
+                            .ordem(i)
+                            .destaque(i == 0)
+                            .build();
+                    rifa.addImagem(img);
+                }
+            }
+        }
+
+        rifa = rifaRepository.save(rifa);
+        return mapToAdminDTO(rifa);
+    }
+
+    @Transactional
+    public void excluirRifa(Long id) {
+        Rifa rifa = rifaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Rifa não encontrada com o ID: " + id));
+
+        numeroCotaRepository.deleteByRifa(rifa);
+        pedidoRepository.deleteByRifa(rifa);
+        historicoSorteioRepository.deleteByRifa(rifa);
+        historicoSorteioRepository.deleteByRifaId(id);
+        rifaRepository.delete(rifa);
     }
 
     @Transactional

@@ -15,10 +15,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cabinet+Grotesk:wght@800;900&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-DdFkWPiy.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-jnYQTbqH.css">
+    <script>
+      // Polyfill para bibliotecas como sockjs-client que esperam o objeto 'global' do Node
+      if (typeof window.global === 'undefined') {
+        window.global = window;
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-Dx6Telxp.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-VTV8mH6b.css">
   </head>
   <body class="bg-[#0b0f17] text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white overflow-x-hidden min-h-screen">
     <div id="root"></div>
   </body>
 </html>
+

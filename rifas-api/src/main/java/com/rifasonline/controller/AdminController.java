@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -43,6 +44,19 @@ public class AdminController {
     @PostMapping("/rifas")
     public ResponseEntity<RifaAdminDTO> criarRifa(@Valid @RequestBody CriarRifaRequest request) {
         return ResponseEntity.ok(rifaService.criarRifa(request));
+    }
+
+    @PutMapping("/rifas/{id}")
+    public ResponseEntity<RifaAdminDTO> atualizarRifa(
+            @PathVariable Long id,
+            @Valid @RequestBody CriarRifaRequest request) {
+        return ResponseEntity.ok(rifaService.atualizarRifa(id, request));
+    }
+
+    @DeleteMapping("/rifas/{id}")
+    public ResponseEntity<Map<String, Object>> excluirRifa(@PathVariable Long id) {
+        rifaService.excluirRifa(id);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Rifa excluída com sucesso!"));
     }
 
     @PostMapping("/rifas/{id}/parametrizar-sorteio")
@@ -81,4 +95,3 @@ public class AdminController {
         return ResponseEntity.ok(dto);
     }
 }
-

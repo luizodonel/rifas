@@ -1,6 +1,7 @@
 package com.rifasonline.repository;
 
 import com.rifasonline.model.HistoricoSorteio;
+import com.rifasonline.model.Rifa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,5 +12,6 @@ import java.util.Optional;
 public interface HistoricoSorteioRepository extends JpaRepository<HistoricoSorteio, Long> {
     List<HistoricoSorteio> findTop10ByOrderByDataHoraExecucaoDesc();
     Optional<HistoricoSorteio> findByRifaId(Long rifaId);
+    void deleteByRifa(Rifa rifa);
+    void deleteByRifaId(Long rifaId);
 }
-

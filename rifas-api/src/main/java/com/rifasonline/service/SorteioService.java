@@ -148,10 +148,8 @@ public class SorteioService {
                             rifa.getTitulo(), rifa.getId());
                     executarSorteio(rifa.getId(), false);
                 } else {
-                    // Sem cotas vendidas, prorroga o prazo por 24 horas automaticamente
-                    rifa.setDataHoraSorteio(agora.plusHours(24));
-                    rifaRepository.save(rifa);
-                    log.info("Rifa ID {} sem cotas pagas no prazo; dataHoraSorteio estendida em 24h.", rifa.getId());
+                    // Sem cotas pagas ainda: mantém rigorosamente a data escolhida pelo Administrador
+                    log.debug("Rifa ID {} aguardando participantes com cotas pagas.", rifa.getId());
                 }
             } catch (Exception e) {
                 log.error("Erro ao processar sorteio automático da rifa ID {}: {}", rifa.getId(), e.getMessage());
