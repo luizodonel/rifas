@@ -140,10 +140,10 @@ public class RifaService {
         Rifa rifa = rifaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Rifa não encontrada com o ID: " + id));
 
+        // Limpa registros vinculados
         numeroCotaRepository.deleteByRifa(rifa);
         pedidoRepository.deleteByRifa(rifa);
         historicoSorteioRepository.deleteByRifa(rifa);
-        historicoSorteioRepository.deleteByRifaId(id);
         rifaRepository.delete(rifa);
     }
 

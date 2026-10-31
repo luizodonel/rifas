@@ -29,6 +29,11 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinningNumber, setSpinningNumber] = useState('00000');
   const spinIntervalRef = useRef<number | null>(null);
+  const pollingRef = useRef<number | null>(null);
+  const isDrawTriggered = useRef<boolean>(false);
+
+  const isEncerrado =
+    Boolean(sorteioInfo?.numeroSorteado || rifa.status === 'ENCERRADA' || rifa.ganhador);
 
   // Carrega informações públicas do sorteio
   useEffect(() => {
@@ -43,16 +48,38 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
       .catch((err) => console.error('Erro ao buscar dados do sorteio:', err));
   }, [rifa.id]);
 
+  // Função para verificar se o sorteio foi realizado
+  const verificarResultado = async () => {
+    try {
+      const data = await api.rifas.obterSorteioAoVivo(rifa.id);
+      if (data && data.numeroSorteado) {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+        iniciarAnimacaoRoleta(data);
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  };
+
   // Conecta ao WebSocket do sorteio em tempo real
   useEffect(() => {
     const unsubscribe = subscribeToSorteio(rifa.id, (novoEvento) => {
-      // Inicia animação de roleta
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
       iniciarAnimacaoRoleta(novoEvento);
     });
 
     return () => {
       unsubscribe();
       if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
+      if (pollingRef.current) clearInterval(pollingRef.current);
     };
   }, [rifa.id]);
 
@@ -65,6 +92,13 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
 
       if (difference <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0 });
+        if (!isDrawTriggered.current && !isEncerrado) {
+          isDrawTriggered.current = true;
+          setIsSpinning(true);
+          // Inicia roleta visual e verifica o resultado no backend
+          verificarResultado();
+          pollingRef.current = window.setInterval(verificarResultado, 1500);
+        }
         return;
       }
 
@@ -84,16 +118,19 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
 
     calculateTime();
     const interval = setInterval(calculateTime, 1000);
-    return () => clearInterval(interval);
-  }, [rifa.dataHoraSorteio]);
+    return () => {
+      clearInterval(interval);
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [rifa.dataHoraSorteio, isEncerrado]);
 
   const triggerConfetti = () => {
     try {
       confetti({
-        particleCount: 120,
-        spread: 80,
+        particleCount: 140,
+        spread: 85,
         origin: { y: 0.6 },
-        colors: ['#10b981', '#f59e0b', '#3b82f6', '#ec4899'],
+        colors: ['#10b981', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6'],
       });
     } catch {
       // ignore
@@ -103,7 +140,9 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
   const iniciarAnimacaoRoleta = (resultado: SorteioPublico) => {
     setIsSpinning(true);
     let count = 0;
-    const totalFlips = 35;
+    const totalFlips = 30;
+
+    if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
 
     spinIntervalRef.current = window.setInterval(() => {
       count++;
@@ -112,15 +151,13 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
 
       if (count >= totalFlips) {
         if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
+        setSpinningNumber(resultado.numeroSorteado || '00000');
         setIsSpinning(false);
         setSorteioInfo(resultado);
         triggerConfetti();
       }
-    }, 80);
+    }, 70);
   };
-
-  const isEncerrado =
-    sorteioInfo?.numeroSorteado || rifa.status === 'ENCERRADA' || rifa.ganhador;
 
   return (
     <div
@@ -265,8 +302,8 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
                   </span>
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 text-center border-brand-500/40">
-                  <span className="text-3xl sm:text-5xl font-mono font-black text-emerald-400 block animate-pulse">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-4 text-center">
+                  <span className="text-3xl sm:text-5xl font-mono font-black text-brand-400 block animate-pulse">
                     {String(timeLeft.seconds).padStart(2, '0')}
                   </span>
                   <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -275,16 +312,16 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400">
-                <AlertCircle className="w-4 h-4 text-amber-400" />
+              <div className="mt-6 flex items-center justify-center gap-2 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 py-2.5 px-4 rounded-xl max-w-md mx-auto">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
                 <span>Ao zerar o cronômetro, o sorteio é disparado automaticamente na sua tela!</span>
               </div>
             </div>
 
-            {/* CTA para Comprar Mais Cotas Antes de Zerar */}
+            {/* Chamada para Ação */}
             {onComprarCotas && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-brand-950/40 border border-brand-500/30 rounded-2xl p-4">
-                <div>
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-brand-900/40 via-slate-900 to-slate-900 border border-brand-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
                   <h4 className="text-sm font-bold text-white">Ainda dá tempo de participar!</h4>
                   <p className="text-xs text-slate-400">
                     Aumente suas chances garantindo mais bilhetes antes do cronômetro zerar.
@@ -292,7 +329,7 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
                 </div>
                 <button
                   onClick={() => onComprarCotas(rifa)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-black text-xs uppercase tracking-wider whitespace-nowrap shadow-lg shadow-brand-500/20 transition-all transform active:scale-95"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all transform active:scale-95 shadow-lg shadow-brand-500/25 shrink-0"
                 >
                   Garantir Cotas Agora
                 </button>
@@ -301,12 +338,10 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-500 font-medium">
+        {/* Rodapé do Modal */}
+        <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
           <span>Horário do Sorteio: {formatDate(rifa.dataHoraSorteio)}</span>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
+          <button onClick={onClose} className="hover:text-white transition-colors">
             Fechar Janela
           </button>
         </div>
@@ -314,4 +349,3 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
     </div>
   );
 };
-
