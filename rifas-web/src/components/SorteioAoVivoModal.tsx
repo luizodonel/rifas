@@ -48,16 +48,42 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
       .catch((err) => console.error('Erro ao buscar dados do sorteio:', err));
   }, [rifa.id]);
 
+  // Inicia rotação animada imediata
+  const iniciarGiroAtivo = () => {
+    setIsSpinning(true);
+    if (!spinIntervalRef.current) {
+      spinIntervalRef.current = window.setInterval(() => {
+        const randomNum = Math.floor(Math.random() * (rifa.totalCotas || 100000));
+        setSpinningNumber(String(randomNum).padStart(5, '0'));
+      }, 70);
+    }
+  };
+
+  // Finaliza a roleta travando no número vencedor oficial e exibindo o ganhador
+  const finalizarSorteioComGanhador = (resultado: SorteioPublico) => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    setIsSpinning(true);
+    setTimeout(() => {
+      if (spinIntervalRef.current) {
+        clearInterval(spinIntervalRef.current);
+        spinIntervalRef.current = null;
+      }
+      setSpinningNumber(resultado.numeroSorteado || '00000');
+      setIsSpinning(false);
+      setSorteioInfo(resultado);
+      triggerConfetti();
+    }, 1200);
+  };
+
   // Função para verificar se o sorteio foi realizado
   const verificarResultado = async () => {
     try {
       const data = await api.rifas.obterSorteioAoVivo(rifa.id);
       if (data && data.numeroSorteado) {
-        if (pollingRef.current) {
-          clearInterval(pollingRef.current);
-          pollingRef.current = null;
-        }
-        iniciarAnimacaoRoleta(data);
+        finalizarSorteioComGanhador(data);
         return true;
       }
     } catch {
@@ -69,11 +95,7 @@ export const SorteioAoVivoModal: React.FC<SorteioAoVivoModalProps> = ({
   // Conecta ao WebSocket do sorteio em tempo real
   useEffect(() => {
     const unsubscribe = subscribeToSorteio(rifa.id, (novoEvento) => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-      iniciarAnimacaoRoleta(novoEvento);
+      finalizarSorteioComGanhador(novoEvento);
     });
 
     return () => {

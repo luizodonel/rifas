@@ -260,7 +260,8 @@ public class SorteioService {
     @Transactional
     public void verificarCronometroSorteios() {
         LocalDateTime agora = LocalDateTime.now();
-        List<Rifa> rifasParaSortear = rifaRepository.findByStatusAndDataHoraSorteioBefore(StatusRifa.ATIVA, agora);
+        List<Rifa> rifasParaSortear = rifaRepository.findByStatusInAndDataHoraSorteioBefore(
+                List.of(StatusRifa.ATIVA, StatusRifa.EM_BREVE, StatusRifa.AO_VIVO), agora);
 
         for (Rifa rifa : rifasParaSortear) {
             try {
@@ -273,11 +274,18 @@ public class SorteioService {
         }
     }
 
+    @Transactional
     public SorteioPublicoDTO obterSorteioPublico(Long rifaId) {
         Rifa rifa = rifaRepository.findById(rifaId)
                 .orElseThrow(() -> new IllegalArgumentException("Rifa não encontrada com ID: " + rifaId));
 
         if (rifa.getStatus() != StatusRifa.ENCERRADA || rifa.getGanhador() == null) {
+            LocalDateTime agora = LocalDateTime.now();
+            if (rifa.getDataHoraSorteio() != null && !rifa.getDataHoraSorteio().isAfter(agora)) {
+                log.info("Horário do sorteio atingido para a rifa ID {}. Executando sorteio agora...", rifaId);
+                return executarSorteio(rifaId, false);
+            }
+
             return SorteioPublicoDTO.builder()
                     .rifaId(rifa.getId())
                     .rifaTitulo(rifa.getTitulo())
